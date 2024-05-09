@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# 检查当前用户是否为 root 用户
-if [[ $EUID -ne 0 ]]; then
-    echo "请使用 root 用户执行此脚本。"
-else
-    # 当前用户为 root 用户，执行 apt update 命令
-    apt update
-    apt install zsh -y
-    yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-    git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
-    cp ~/.zshrc ~/.zshrc.back
-    echo "# If you come from bash you might have to change your $PATH.
+# 当前用户为 root 用户，执行 apt update 命令
+apt update
+apt install zsh -y
+yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+cp ~/.zshrc ~/.zshrc.back
+echo "# If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 # Path to your oh-my-zsh installation.
 
@@ -23,7 +20,8 @@ export ZSH="$HOME/.oh-my-zsh"
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 
-ZSH_THEME="fletcherm"
+#ZSH_THEME="fletcherm"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -73,7 +71,7 @@ ZSH_THEME="fletcherm"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 
-plugins=(git history zsh-syntax-highlighting zsh-autosuggestions command-not-found)
+plugins=(git history zsh-syntax-highlighting zsh-autosuggestions command-not-found safe-paste)
 
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
 
@@ -99,8 +97,15 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+
+TERM=xterm-256color
+if [[ "$SHELL" =~ "zsh" ]] ; then
+    bindkey  "^[[H"   beginning-of-line
+    bindkey  "^[[F"   end-of-line
+    bindkey  "^[[3~"  delete-char
+fi
+
 function chpwd() {
     ls -al
-}" >>~/.zshrc
-    echo "oh-my-zsh 安装完成。"
-fi
+}" >~/.zshrc
+echo "oh-my-zsh 安装完成。"
