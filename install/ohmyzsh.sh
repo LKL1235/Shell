@@ -10,26 +10,8 @@ git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.o
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/you-should-use
 cp ~/.zshrc ~/.zshrc.back
-touch ~/.mytheme.sh
-cat << 'EOF' > ~/.mytheme.sh
-ZSH_THEME="powerlevel10k/powerlevel10k"
-plugins=(git history zsh-syntax-highlighting zsh-autosuggestions command-not-found safe-paste you-should-use)
-fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
-TERM=xterm-256color
-if [[ $SHELL =~ "zsh" ]] ; then
-    bindkey  '^[[H'   beginning-of-line
-    bindkey  '^[[F'   end-of-line
-    bindkey  '^[[3~'  delete-char
-fi
-
-function chpwd() {
-    ls -al
-}
-function precmd(){
-    echo $?>~/.prev_exit_code
-}
-source $ZSH/oh-my-zsh.sh
-EOF
+mkdir ~/.myshell
+cp ./mytheme.sh ~/.myshell/mytheme.sh
+cp ./venv.sh ~/.myshell/venv.sh
 echo "source ~/.mytheme.sh">>~/.zshrc
 echo "oh-my-zsh 安装完成。"
-
