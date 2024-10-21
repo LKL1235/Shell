@@ -1,8 +1,10 @@
 #!/bin/bash
-set -e
 # 当前用户为 root 用户，执行 apt update 命令
-apt update
-apt install zsh -y
+if [ $(id -u) -eq 0 ]; then
+    apt update
+    apt install zsh -y
+fi
+
 yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
@@ -13,5 +15,5 @@ cp ~/.zshrc ~/.zshrc.back
 mkdir ~/.myshell
 cp ./mytheme.sh ~/.myshell/mytheme.sh
 cp ./venv.sh ~/.myshell/venv.sh
-echo "source ~/.mytheme.sh">>~/.zshrc
+echo "source ~/.myshell/mytheme.sh" >>~/.zshrc
 echo "oh-my-zsh 安装完成。"
