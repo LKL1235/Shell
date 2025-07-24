@@ -1,8 +1,9 @@
 #!/bin/bash
+set -e
 # 当前用户为 root 用户，执行 apt update 命令
 if [ $(id -u) -eq 0 ]; then
     apt update
-    apt install zsh -y
+    apt install zsh
 fi
 
 yes | sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
