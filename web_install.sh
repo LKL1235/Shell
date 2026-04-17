@@ -53,6 +53,20 @@ install_ohmyzsh() {
     info "oh-my-zsh done."
 }
 
+install_meslo_font() {
+    info "Installing MesloLGS NF fonts for user '$REAL_USER'..."
+    apt-get update -q && apt-get install -y curl fontconfig
+
+    local fonts_dir="$REAL_HOME/.local/share/fonts"
+    as_user mkdir -p "$fonts_dir"
+    as_user curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf" -o "$fonts_dir/MesloLGS NF Regular.ttf"
+    as_user curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf" -o "$fonts_dir/MesloLGS NF Bold.ttf"
+    as_user curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf" -o "$fonts_dir/MesloLGS NF Italic.ttf"
+    as_user curl -fsSL "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf" -o "$fonts_dir/MesloLGS NF Bold Italic.ttf"
+    as_user fc-cache -f "$fonts_dir"
+    info "MesloLGS NF fonts done."
+}
+
 install_navi() {
     info "Installing navi for user '$REAL_USER'..."
     apt-get install -y fzf
@@ -106,6 +120,7 @@ Usage: sudo $0 [OPTIONS]
 Options:
   --all             Install everything
   --ohmyzsh         Install oh-my-zsh + plugins + theme
+  --meslofont       Install MesloLGS NF fonts for powerlevel10k
   --navi            Install navi + cheat sheets
   --networktools    Install iftop / nload / net-tools
   --systemtools     Install fastfetch
@@ -123,12 +138,13 @@ main() {
 
     [ $# -eq 0 ] && { usage; exit 0; }
 
-    local do_ohmyzsh=0 do_navi=0 do_net=0 do_sys=0 do_key=0
+    local do_ohmyzsh=0 do_font=0 do_navi=0 do_net=0 do_sys=0 do_key=0
 
     for arg in "$@"; do
         case "$arg" in
-            --all)          do_ohmyzsh=1; do_navi=1; do_net=1; do_sys=1; do_key=1 ;;
+            --all)          do_ohmyzsh=1; do_font=1; do_navi=1; do_net=1; do_sys=1; do_key=1 ;;
             --ohmyzsh)      do_ohmyzsh=1 ;;
+            --meslofont)    do_font=1 ;;
             --navi)         do_navi=1 ;;
             --networktools) do_net=1 ;;
             --systemtools)  do_sys=1 ;;
@@ -139,6 +155,7 @@ main() {
     done
 
     [ $do_ohmyzsh -eq 1 ] && install_ohmyzsh
+    [ $do_font    -eq 1 ] && install_meslo_font
     [ $do_navi    -eq 1 ] && install_navi
     [ $do_net     -eq 1 ] && install_networktools
     [ $do_sys     -eq 1 ] && install_systemtools

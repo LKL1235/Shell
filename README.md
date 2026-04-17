@@ -19,6 +19,7 @@ Options:
   --all             Install everything
   --ohmyzsh         Install oh-my-zsh + plugins (syntax-highlighting,
                     autosuggestions, completions, you-should-use) + powerlevel10k
+  --meslofont       Install MesloLGS NF fonts for powerlevel10k
   --navi            Install navi + custom cheat sheets
   --networktools    Install iftop / nload / net-tools
   --systemtools     Install fastfetch
@@ -45,6 +46,7 @@ curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh |
 |------|-------------|
 | `web_install.sh` | Unified installer entry-point |
 | `install/ohmyzsh.sh` | oh-my-zsh + plugins + powerlevel10k |
+| `install/meslo-font.sh` | Install MesloLGS NF fonts for p10k |
 | `install/navi.sh` | navi cheatsheet tool |
 | `install/networktools.sh` | Network monitoring tools |
 | `install/systemtools.sh` | System info tools (fastfetch) |
