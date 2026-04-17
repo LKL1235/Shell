@@ -7,7 +7,7 @@ A collection of shell scripts for setting up a development environment on Debian
 Run everything in one command (requires root):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh) --all
+curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh | sudo bash -s -- --all
 ```
 
 ## Usage
@@ -30,13 +30,13 @@ Options:
 
 ```bash
 # Install oh-my-zsh and navi only
-bash web_install.sh --ohmyzsh --navi
+curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh | sudo bash -s -- --ohmyzsh --navi
 
 # Add root SSH key only
-bash web_install.sh --rootkey
+curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh | sudo bash -s -- --rootkey
 
 # Install everything remotely
-bash <(curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh) --all
+curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh | sudo bash -s -- --all
 ```
 
 ## Scripts
