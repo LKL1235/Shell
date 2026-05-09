@@ -100,7 +100,7 @@ read_only = " 󰌾"
 truncation_length = 3
 truncate_to_repo = true
 home_symbol = "~"
-format = "[󰉋 $path](bold cyan)"
+format = "[󰉋 $path ](bold cyan)"
 
 
 [aws]
