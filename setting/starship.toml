@@ -88,7 +88,7 @@ symbol = ' '
 
 [time]
 disabled = false
-format = "[󰥔 $time](bold blue)"
+format = "[󰥔 $time](bold #a80ebc)"
 time_format = "%H:%M:%S"  # 24小时制
 
 [character]
