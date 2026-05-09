@@ -30,8 +30,34 @@ as_user() {
 }
 
 # ── tools ─────────────────────────────────────────────────────────────────────
+# Writes a single managed block to ~/.zshrc (THEME: starship | p10k).
+refresh_myshell_zshrc() {
+    local zshrc="$REAL_HOME/.zshrc"
+    as_user touch "$zshrc"
+    if as_user grep -qF '# >>>myshell-theme-begin' "$zshrc" 2>/dev/null; then
+        as_user sed -i '/# >>>myshell-theme-begin/,/# <<<myshell-theme-end/d' "$zshrc"
+    fi
+    if as_user grep -qFx 'source ~/.myshell/mytheme.sh' "$zshrc" 2>/dev/null; then
+        as_user sed -i '\|^source ~/.myshell/mytheme.sh$|d' "$zshrc"
+    fi
+    {
+        echo '# >>>myshell-theme-begin'
+        if [ "$THEME" = "starship" ]; then
+            echo 'export PATH="$HOME/.local/bin:$PATH"'
+            echo 'ZSH_THEME=""'
+        else
+            echo 'ZSH_THEME="powerlevel10k/powerlevel10k"'
+        fi
+        echo 'source ~/.myshell/mytheme.sh'
+        if [ "$THEME" = "starship" ]; then
+            echo 'eval "$(starship init zsh)"'
+        fi
+        echo '# <<<myshell-theme-end'
+    } | as_user tee -a "$zshrc" >/dev/null
+}
+
 install_ohmyzsh() {
-    info "Installing oh-my-zsh for user '$REAL_USER' (home: $REAL_HOME)..."
+    info "Installing oh-my-zsh for user '$REAL_USER' (home: $REAL_HOME), theme: $THEME..."
     apt-get update -q && apt-get install -y zsh curl git
 
     # Install oh-my-zsh into the real user's home
@@ -41,15 +67,26 @@ install_ohmyzsh() {
     as_user git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$custom/plugins/zsh-syntax-highlighting"
     as_user git clone https://github.com/zsh-users/zsh-autosuggestions          "$custom/plugins/zsh-autosuggestions"
     as_user git clone https://github.com/zsh-users/zsh-completions              "$custom/plugins/zsh-completions"
-    as_user git clone --depth=1 https://github.com/romkatv/powerlevel10k.git    "$custom/themes/powerlevel10k"
     as_user git clone https://github.com/MichaelAquilina/zsh-you-should-use.git "$custom/plugins/you-should-use"
+    if [ "$THEME" = "p10k" ]; then
+        as_user git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$custom/themes/powerlevel10k"
+    fi
+
+    if [ "$THEME" = "starship" ]; then
+        info "Installing Starship for user '$REAL_USER'..."
+        as_user mkdir -p "$REAL_HOME/.local/bin"
+        curl -sS https://starship.rs/install.sh | as_user sh -s -- -y -b "$REAL_HOME/.local/bin"
+        as_user mkdir -p "$REAL_HOME/.config"
+        as_user curl -fsSL "$REPO/setting/starship.toml" -o "$REAL_HOME/.config/starship.toml"
+    fi
 
     as_user cp "$REAL_HOME/.zshrc" "$REAL_HOME/.zshrc.back" 2>/dev/null || true
     as_user mkdir -p "$REAL_HOME/.myshell"
     as_user curl -fsSL "$REPO/install/mytheme.sh" -o "$REAL_HOME/.myshell/mytheme.sh"
     as_user curl -fsSL "$REPO/install/venv.sh"    -o "$REAL_HOME/.myshell/venv.sh"
-    as_user grep -qF "source ~/.myshell/mytheme.sh" "$REAL_HOME/.zshrc" 2>/dev/null \
-        || as_user bash -c "echo 'source ~/.myshell/mytheme.sh' >> '$REAL_HOME/.zshrc'"
+
+    refresh_myshell_zshrc
+
     info "oh-my-zsh done."
 }
 
@@ -120,6 +157,8 @@ Usage: sudo $0 [OPTIONS]
 Options:
   --all             Install everything
   --ohmyzsh         Install oh-my-zsh + plugins + theme
+  --theme NAME      Shell theme for --all / --ohmyzsh only: starship (default) or p10k
+                    ZSH_THEME and Starship init are written to ~/.zshrc, not mytheme.sh
   --meslofont       Install MesloLGS NF fonts for powerlevel10k
   --navi            Install navi + cheat sheets
   --networktools    Install iftop / nload / net-tools
@@ -129,7 +168,9 @@ Options:
 
 Examples:
   curl ... | sudo bash -s -- --all
+  curl ... | sudo bash -s -- --all --theme=p10k
   curl ... | sudo bash -s -- --ohmyzsh --navi
+  curl ... | sudo bash -s -- --ohmyzsh --theme starship
 EOF
 }
 
@@ -139,20 +180,42 @@ main() {
     [ $# -eq 0 ] && { usage; exit 0; }
 
     local do_ohmyzsh=0 do_font=0 do_navi=0 do_net=0 do_sys=0 do_key=0
+    local THEME=starship theme_explicit=0
 
-    for arg in "$@"; do
-        case "$arg" in
-            --all)          do_ohmyzsh=1; do_font=1; do_navi=1; do_net=1; do_sys=1; do_key=1 ;;
-            --ohmyzsh)      do_ohmyzsh=1 ;;
-            --meslofont)    do_font=1 ;;
-            --navi)         do_navi=1 ;;
-            --networktools) do_net=1 ;;
-            --systemtools)  do_sys=1 ;;
-            --rootkey)      do_key=1 ;;
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --all)          do_ohmyzsh=1; do_font=1; do_navi=1; do_net=1; do_sys=1; do_key=1; shift ;;
+            --ohmyzsh)      do_ohmyzsh=1; shift ;;
+            --meslofont)    do_font=1; shift ;;
+            --navi)         do_navi=1; shift ;;
+            --networktools) do_net=1; shift ;;
+            --systemtools)  do_sys=1; shift ;;
+            --rootkey)      do_key=1; shift ;;
+            --theme=*)
+                theme_explicit=1
+                THEME="${1#*=}"
+                shift
+                ;;
+            --theme)
+                theme_explicit=1
+                [ -n "${2:-}" ] || die "--theme requires a value (starship|p10k)"
+                THEME="$2"
+                shift 2
+                ;;
             -h|--help)      usage; exit 0 ;;
-            *)              die "Unknown option: $arg" ;;
+            *)              die "Unknown option: $1" ;;
         esac
     done
+
+    THEME="${THEME,,}"
+    case "$THEME" in
+        starship|p10k) ;;
+        *) die "Invalid --theme: use starship or p10k" ;;
+    esac
+
+    if [ "$theme_explicit" -eq 1 ] && [ "$do_ohmyzsh" -eq 0 ]; then
+        die "--theme is only valid with --all or --ohmyzsh"
+    fi
 
     [ $do_ohmyzsh -eq 1 ] && install_ohmyzsh
     [ $do_font    -eq 1 ] && install_meslo_font

@@ -25,5 +25,8 @@ cp ~/.zshrc ~/.zshrc.back
 mkdir -p ~/.myshell
 cp ./mytheme.sh ~/.myshell/mytheme.sh
 cp ./venv.sh ~/.myshell/venv.sh
-echo "source ~/.myshell/mytheme.sh" >>~/.zshrc
+grep -qF 'ZSH_THEME="powerlevel10k/powerlevel10k"' ~/.zshrc 2>/dev/null \
+    || echo 'ZSH_THEME="powerlevel10k/powerlevel10k"' >>~/.zshrc
+grep -qF "source ~/.myshell/mytheme.sh" ~/.zshrc 2>/dev/null \
+    || echo "source ~/.myshell/mytheme.sh" >>~/.zshrc
 echo "oh-my-zsh 安装完成。"
