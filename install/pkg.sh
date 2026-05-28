@@ -23,7 +23,7 @@ _pkg_detect_family() {
         debian|ubuntu|linuxmint|pop|elementary|kali|raspbian|zorin|neon)
             PKG_FAMILY=debian
             ;;
-        fedora|rhel|centos|rocky|almalinux|ol|amzn|azurelinux|mariner)
+        fedora|rhel|centos|rocky|almalinux|ol|amzn|azurelinux|mariner|alinux|alios|anolis|aliyun|opencloudos|tencentos|eurolinux)
             PKG_FAMILY=rhel
             ;;
         arch|manjaro|endeavouros|garuda|cachyos)

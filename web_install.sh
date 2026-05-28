@@ -2,13 +2,31 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/LKL1235/Shell/main"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=install/pkg.sh
-source "$SCRIPT_DIR/install/pkg.sh"
+
+# When run via `curl ... | bash`, only web_install.sh is on stdin — fetch pkg.sh from the repo.
+_source_pkg() {
+    local script_dir pkg_local pkg_tmp=""
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)" || script_dir=""
+    pkg_local="${script_dir:+$script_dir/install/}pkg.sh"
+    if [ -n "$pkg_local" ] && [ -f "$pkg_local" ]; then
+        # shellcheck source=install/pkg.sh
+        source "$pkg_local"
+        return 0
+    fi
+    pkg_tmp="$(mktemp)"
+    curl -fsSL "$REPO/install/pkg.sh" -o "$pkg_tmp" \
+        || { rm -f "$pkg_tmp"; die "Failed to download $REPO/install/pkg.sh"; }
+    # shellcheck source=/dev/null
+    source "$pkg_tmp"
+    rm -f "$pkg_tmp"
+}
+
+die() { echo "[ERROR] $*" >&2; exit 1; }
+_source_pkg
+unset -f _source_pkg
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 info()  { echo "[INFO]  $*"; }
-die()   { echo "[ERROR] $*" >&2; exit 1; }
 
 # Resolve the real (non-root) user when invoked via sudo
 if [ -n "$SUDO_USER" ]; then
