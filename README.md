@@ -7,12 +7,14 @@
 | 系列 | 包管理器 | 示例 |
 |------|----------|------|
 | Debian/Ubuntu | apt | Debian, Ubuntu, Mint, Pop!\_OS, Kali |
-| RHEL/Fedora | dnf / yum | Fedora, Rocky, AlmaLinux, CentOS Stream, Amazon Linux |
+| RHEL/Fedora | dnf / yum | Fedora, Rocky, AlmaLinux, CentOS Stream, **Amazon Linux 2023**, Amazon Linux 2 |
 | Arch | pacman | Arch Linux, Manjaro |
 | Alpine | apk | Alpine Linux |
 | openSUSE | zypper | Leap, Tumbleweed, SLES |
 
 安装逻辑集中在 `install/pkg.sh`，`web_install.sh` 与各 `install/*.sh` 脚本通过它自动检测发行版并调用对应的包管理器。
+
+**Amazon Linux 2023**（`ID=amzn`, `VERSION_ID=2023`）使用 `dnf` 安装系统包；`fastfetch` 不在 AL2023 官方源中，脚本会自动从 GitHub 下载对应架构的 `.rpm` 安装。
 
 ## Quick Install
 
