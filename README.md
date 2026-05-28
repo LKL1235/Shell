@@ -1,10 +1,22 @@
 # Shell
 
-A collection of shell scripts for setting up a development environment on Debian/Ubuntu.
+用于在多种 Linux 发行版上配置开发环境的 shell 脚本集合。
+
+## 支持的发行版
+
+| 系列 | 包管理器 | 示例 |
+|------|----------|------|
+| Debian/Ubuntu | apt | Debian, Ubuntu, Mint, Pop!\_OS, Kali |
+| RHEL/Fedora | dnf / yum | Fedora, Rocky, AlmaLinux, CentOS Stream, Amazon Linux |
+| Arch | pacman | Arch Linux, Manjaro |
+| Alpine | apk | Alpine Linux |
+| openSUSE | zypper | Leap, Tumbleweed, SLES |
+
+安装逻辑集中在 `install/pkg.sh`，`web_install.sh` 与各 `install/*.sh` 脚本通过它自动检测发行版并调用对应的包管理器。
 
 ## Quick Install
 
-Run everything in one command (requires root):
+一键安装（需要 root）：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh | sudo bash -s -- --all
@@ -45,6 +57,7 @@ curl -fsSL https://raw.githubusercontent.com/LKL1235/Shell/main/web_install.sh |
 | Path | Description |
 |------|-------------|
 | `web_install.sh` | Unified installer entry-point |
+| `install/pkg.sh` | Cross-distro package manager detection and install helpers |
 | `install/ohmyzsh.sh` | oh-my-zsh + plugins + powerlevel10k |
 | `install/meslo-font.sh` | Install MesloLGS NF fonts for p10k |
 | `install/navi.sh` | navi cheatsheet tool |

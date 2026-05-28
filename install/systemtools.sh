@@ -1,7 +1,15 @@
 #!/bin/bash
+set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=pkg.sh
+source "$SCRIPT_DIR/pkg.sh"
 
-# 当前用户为 root 用户，执行 apt update 命令
-add-apt-repository ppa:zhangsongcui3371/fastfetch
-apt update
-apt install fastfetch -y
+if [ "$(id -u)" -ne 0 ]; then
+    echo "[ERROR] Run as root (e.g. sudo $0)" >&2
+    exit 1
+fi
+
+pkg_ensure_supported
+pkg_install_fastfetch
+echo "System tools installed ($(pkg_distro_id)/$(pkg_family))."
