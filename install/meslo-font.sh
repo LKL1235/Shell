@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=pkg.sh
+source "$SCRIPT_DIR/pkg.sh"
+
 info() { echo "[INFO]  $*"; }
 die()  { echo "[ERROR] $*" >&2; exit 1; }
 
@@ -28,8 +32,9 @@ as_user() {
 install_meslo_font() {
     info "Installing MesloLGS NF fonts for user '$REAL_USER'..."
 
-    apt-get update -q
-    apt-get install -y curl fontconfig
+    pkg_ensure_supported || die "Unsupported Linux distribution."
+    pkg_update
+    pkg_install curl fontconfig
 
     local fonts_dir="$REAL_HOME/.local/share/fonts"
     as_user mkdir -p "$fonts_dir"

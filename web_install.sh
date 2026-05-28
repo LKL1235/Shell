@@ -2,6 +2,9 @@
 set -e
 
 REPO="https://raw.githubusercontent.com/LKL1235/Shell/main"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=install/pkg.sh
+source "$SCRIPT_DIR/install/pkg.sh"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 info()  { echo "[INFO]  $*"; }
@@ -57,8 +60,8 @@ refresh_myshell_zshrc() {
 }
 
 install_ohmyzsh() {
-    info "Installing oh-my-zsh for user '$REAL_USER' (home: $REAL_HOME), theme: $THEME..."
-    apt-get update -q && apt-get install -y zsh curl git
+    info "Installing oh-my-zsh for user '$REAL_USER' (home: $REAL_HOME), theme: $THEME (distro: $(pkg_distro_id)/$(pkg_family))..."
+    pkg_update && pkg_install zsh curl git
 
     # Install oh-my-zsh into the real user's home
     as_user sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -92,7 +95,7 @@ install_ohmyzsh() {
 
 install_meslo_font() {
     info "Installing MesloLGS NF fonts for user '$REAL_USER'..."
-    apt-get update -q && apt-get install -y curl fontconfig
+    pkg_update && pkg_install curl fontconfig
 
     local fonts_dir="$REAL_HOME/.local/share/fonts"
     as_user mkdir -p "$fonts_dir"
@@ -106,7 +109,7 @@ install_meslo_font() {
 
 install_navi() {
     info "Installing navi for user '$REAL_USER'..."
-    apt-get install -y fzf
+    pkg_install fzf
 
     local cargo_bin="$REAL_HOME/.cargo/bin"
     as_user bash -c "$(curl -sL https://raw.githubusercontent.com/denisidoro/navi/master/scripts/install)"
@@ -125,15 +128,14 @@ install_navi() {
 }
 
 install_networktools() {
-    info "Installing network tools..."
-    apt-get update -q && apt-get install -y iftop nload net-tools
+    info "Installing network tools (distro: $(pkg_distro_id)/$(pkg_family))..."
+    pkg_update && pkg_install iftop nload net-tools
     info "Network tools done."
 }
 
 install_systemtools() {
-    info "Installing system tools..."
-    add-apt-repository -y ppa:zhangsongcui3371/fastfetch
-    apt-get update -q && apt-get install -y fastfetch
+    info "Installing system tools (distro: $(pkg_distro_id)/$(pkg_family))..."
+    pkg_install_fastfetch
     info "System tools done."
 }
 
@@ -176,6 +178,7 @@ EOF
 
 main() {
     need_root
+    pkg_ensure_supported || die "This Linux distribution is not supported."
 
     [ $# -eq 0 ] && { usage; exit 0; }
 
