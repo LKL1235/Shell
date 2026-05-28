@@ -5,6 +5,8 @@
 # shellcheck disable=SC2034
 PKG_ID=""
 PKG_ID_LIKE=""
+PKG_VERSION_ID=""
+PKG_PLATFORM_ID=""
 PKG_FAMILY=""
 PKG_PM=""
 
@@ -12,9 +14,14 @@ _pkg_load_os_release() {
     if [ -f /etc/os-release ]; then
         # shellcheck disable=SC1091
         . /etc/os-release
+    elif [ -f /usr/lib/os-release ]; then
+        # shellcheck disable=SC1091
+        . /usr/lib/os-release
     fi
     PKG_ID="${ID:-unknown}"
     PKG_ID_LIKE="${ID_LIKE:-}"
+    PKG_VERSION_ID="${VERSION_ID:-}"
+    PKG_PLATFORM_ID="${PLATFORM_ID:-}"
 }
 
 _pkg_detect_family() {
@@ -127,11 +134,43 @@ pkg_distro_id() {
     echo "$PKG_ID"
 }
 
+pkg_version_id() {
+    [ -n "$PKG_VERSION_ID" ] || _pkg_detect_pm
+    echo "$PKG_VERSION_ID"
+}
+
+# Amazon Linux 2023: ID=amzn, VERSION_ID=2023, PLATFORM_ID=platform:al2023
+pkg_is_amazon_linux_2023() {
+    _pkg_detect_pm
+    [ "$PKG_ID" = "amzn" ] && [ "$PKG_VERSION_ID" = "2023" ] && return 0
+    [ "$PKG_PLATFORM_ID" = "platform:al2023" ] && return 0
+    return 1
+}
+
+pkg_is_amazon_linux_2() {
+    _pkg_detect_pm
+    [ "$PKG_ID" = "amzn" ] && [ "$PKG_VERSION_ID" = "2" ]
+}
+
+# Human-readable distro name for logs
+pkg_distro_label() {
+    _pkg_detect_pm
+    if pkg_is_amazon_linux_2023; then
+        echo "Amazon Linux 2023"
+    elif pkg_is_amazon_linux_2; then
+        echo "Amazon Linux 2"
+    elif [ "$PKG_ID" = "amzn" ]; then
+        echo "Amazon Linux ${PKG_VERSION_ID:-unknown}"
+    else
+        echo "${PKG_ID} ($(pkg_family))"
+    fi
+}
+
 pkg_ensure_supported() {
     _pkg_detect_pm
     if [ -z "$PKG_PM" ]; then
         echo "[ERROR] Unsupported or unrecognized Linux distro (ID=${PKG_ID:-unknown}, ID_LIKE=${PKG_ID_LIKE:-none})." >&2
-        echo "[ERROR] Supported families: Debian/Ubuntu (apt), RHEL/Fedora (dnf/yum), Arch (pacman), Alpine (apk), openSUSE (zypper)." >&2
+        echo "[ERROR] Supported families: Debian/Ubuntu (apt), RHEL/Fedora/Amazon Linux (dnf/yum), Arch (pacman), Alpine (apk), openSUSE (zypper)." >&2
         return 1
     fi
 }
@@ -184,7 +223,33 @@ pkg_install() {
     esac
 }
 
-# Install fastfetch: PPA on Debian/Ubuntu when available; standard repos elsewhere.
+# Install fastfetch from official GitHub .rpm (AL2023 / RHEL-like when not in repos).
+_pkg_install_fastfetch_rpm_release() {
+    local arch tmp rpm_path
+    case "$(uname -m)" in
+        x86_64)  arch=amd64 ;;
+        aarch64) arch=aarch64 ;;
+        *)
+            echo "[WARN] fastfetch: unsupported CPU architecture: $(uname -m)" >&2
+            return 1
+            ;;
+    esac
+    tmp="$(mktemp -d)"
+    rpm_path="$tmp/fastfetch-linux-${arch}.rpm"
+    curl -fsSL \
+        "https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-${arch}.rpm" \
+        -o "$rpm_path" || { rm -rf "$tmp"; return 1; }
+
+    case "$PKG_PM" in
+        dnf)    dnf -y install "$rpm_path" ;;
+        yum)    yum -y localinstall "$rpm_path" ;;
+        microdnf) microdnf -y install "$rpm_path" ;;
+        *)      rpm -Uvh "$rpm_path" ;;
+    esac
+    rm -rf "$tmp"
+}
+
+# Install fastfetch: PPA on Debian/Ubuntu; dnf repos on Fedora; GitHub .rpm on AL2023.
 pkg_install_fastfetch() {
     _pkg_detect_pm
     pkg_ensure_supported || return 1
@@ -196,6 +261,24 @@ pkg_install_fastfetch() {
                     || true
             fi
             pkg_update && pkg_install fastfetch
+            ;;
+        rhel)
+            if pkg_is_amazon_linux_2023; then
+                info_msg="Amazon Linux 2023"
+                echo "[INFO]  Installing fastfetch from GitHub release ($info_msg, not in AL2023 repos)..."
+                pkg_update
+                _pkg_install_fastfetch_rpm_release
+                return $?
+            fi
+            pkg_update
+            if pkg_install fastfetch 2>/dev/null; then
+                return 0
+            fi
+            echo "[INFO]  fastfetch not in repos; trying GitHub .rpm..."
+            _pkg_install_fastfetch_rpm_release || {
+                echo "[WARN] fastfetch install failed (ID=$PKG_ID). See https://github.com/fastfetch-cli/fastfetch" >&2
+                return 1
+            }
             ;;
         *)
             pkg_update

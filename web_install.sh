@@ -78,7 +78,7 @@ refresh_myshell_zshrc() {
 }
 
 install_ohmyzsh() {
-    info "Installing oh-my-zsh for user '$REAL_USER' (home: $REAL_HOME), theme: $THEME (distro: $(pkg_distro_id)/$(pkg_family))..."
+    info "Installing oh-my-zsh for user '$REAL_USER' (home: $REAL_HOME), theme: $THEME ($(pkg_distro_label))..."
     pkg_update && pkg_install zsh curl git
 
     # Install oh-my-zsh into the real user's home
@@ -146,13 +146,13 @@ install_navi() {
 }
 
 install_networktools() {
-    info "Installing network tools (distro: $(pkg_distro_id)/$(pkg_family))..."
+    info "Installing network tools ($(pkg_distro_label))..."
     pkg_update && pkg_install iftop nload net-tools
     info "Network tools done."
 }
 
 install_systemtools() {
-    info "Installing system tools (distro: $(pkg_distro_id)/$(pkg_family))..."
+    info "Installing system tools ($(pkg_distro_label))..."
     pkg_install_fastfetch
     info "System tools done."
 }
